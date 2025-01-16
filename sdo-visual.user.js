@@ -3,7 +3,7 @@
 // @namespace    qlstudios.ru
 // @updateURL    https://raw.githubusercontent.com/VladislavBabarikov/rssu-sdo-visual-plugin/main/sdo-visual.user.js
 // @downloadURL  https://raw.githubusercontent.com/VladislavBabarikov/rssu-sdo-visual-plugin/main/sdo-visual.user.js
-// @version      0.4
+// @version      0.5
 // @description  Beta
 // @author       MinimalCaxapa
 // @match        https://sdo.rgsu.net/*
@@ -53,23 +53,30 @@
     }
 
     /**
-     * Замена содержимого контейнера новостей на <iframe>
-     */
-    function replaceNewsContent() {
+    * Замена содержимого контейнера новостей на два блока
+    */
+    async function replaceNewsContent() {
         const newsContainer = document.querySelector('.user-dashboard');
         if (newsContainer) {
-            newsContainer.innerHTML = '';
-            const iframe = document.createElement('iframe');
-            iframe.src = 'https://qlstudios.ru/rssuvisualplugin/newssdo';
-            iframe.width = '100%';
-            iframe.height = '600px';
-            iframe.style.border = 'none';
-            newsContainer.appendChild(iframe);
-            console.log('Новости заменены на iframe.');
+            try {
+                const response = await fetch('https://raw.githubusercontent.com/VladislavBabarikov/rssu-sdo-deadline/refs/heads/main/rssu_visual_plugin_combined.html');
+                if (response.ok) {
+                    const html = await response.text();
+                    newsContainer.innerHTML = html; // Заменяем содержимое блока
+                    console.log('Новости успешно загружены из GitHub.');
+                } else {
+                    console.error(`Ошибка загрузки: ${response.status}`);
+                    newsContainer.innerHTML = '<p>Не удалось загрузить новости.</p>';
+                }
+            } catch (error) {
+                console.error('Ошибка при загрузке новостей:', error);
+                newsContainer.innerHTML = '<p>Ошибка загрузки данных.</p>';
+            }
         } else {
             console.log('Контейнер новостей отсутствует.');
         }
     }
+
 
     /**
      * Игнорирование ошибок iframe
