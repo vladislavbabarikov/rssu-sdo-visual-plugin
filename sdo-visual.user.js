@@ -3,7 +3,7 @@
 // @namespace    qlstudios.ru
 // @updateURL    https://raw.githubusercontent.com/VladislavBabarikov/rssu-sdo-visual-plugin/main/sdo-visual.user.js
 // @downloadURL  https://raw.githubusercontent.com/VladislavBabarikov/rssu-sdo-visual-plugin/main/sdo-visual.user.js
-// @version      0.3
+// @version      0.4
 // @description  Beta
 // @author       MinimalCaxapa
 // @match        https://sdo.rgsu.net/*
@@ -23,7 +23,29 @@
             if (element) {
                 element.remove();
                 console.log(`Элемент '${name}' удалён.`);
-                observer.disconnect(); // Останавливаем наблюдение после удаления
+                observer.disconnect();
+            }
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+    }
+
+    /**
+     * Удаление конкретных параграфов из заданного контейнера по тексту
+     */
+    function observeAndRemoveParagraphs(parentSelector, textsToRemove) {
+        const observer = new MutationObserver(() => {
+            const parentElement = document.querySelector(parentSelector);
+            if (parentElement) {
+                const paragraphs = parentElement.querySelectorAll('p');
+                paragraphs.forEach((paragraph) => {
+                    textsToRemove.forEach((text) => {
+                        if (paragraph.textContent.trim().includes(text)) {
+                            paragraph.remove();
+                            console.log(`Параграф с текстом "${text}" удалён.`);
+                        }
+                    });
+                });
             }
         });
 
@@ -36,7 +58,7 @@
     function replaceNewsContent() {
         const newsContainer = document.querySelector('.user-dashboard');
         if (newsContainer) {
-            newsContainer.innerHTML = ''; // Очищаем содержимое блока
+            newsContainer.innerHTML = '';
             const iframe = document.createElement('iframe');
             iframe.src = 'https://qlstudios.ru/rssuvisualplugin/newssdo';
             iframe.width = '100%';
@@ -136,7 +158,7 @@
     observeAndRemove('.progress_title', 'Секция "Результат"');
     observeAndRemove('.search-form', 'Секция "Поиск"');
 
-    // Удаляем конкретные параграфы из блока .els-content.els-box
+    // Удаляем конкретные параграфы
     const textsToRemove = [
         'Отображение итоговой оценки на вкладке "Мои курсы" отображается в тестовом режиме.',
         'Актуальные баллы необходимо смотреть на странице "План занятий" → "Прогресс изучения".',
