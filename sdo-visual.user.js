@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         sdo-visual.user.js
 // @namespace    qlstudios.ru
-// @version      0.1
+// @version      0.2
 // @description  Beta
 // @author       MinimalCaxapa
 // @match        https://sdo.rgsu.net/*
