@@ -1,7 +1,9 @@
 // ==UserScript==
 // @name         sdo-visual.user.js
 // @namespace    qlstudios.ru
-// @version      0.2
+// @updateURL    https://raw.githubusercontent.com/VladislavBabarikov/rssu-sdo-visual-plugin/main/sdo-visual.user.js
+// @downloadURL  https://raw.githubusercontent.com/VladislavBabarikov/rssu-sdo-visual-plugin/main/sdo-visual.user.js
+// @version      0.3
 // @description  Beta
 // @author       MinimalCaxapa
 // @match        https://sdo.rgsu.net/*
@@ -13,9 +15,7 @@
     'use strict';
 
     /**
-     * Использование MutationObserver для удаления элемента при его появлении
-     * @param {string} selector - CSS-селектор элемента
-     * @param {string} name - Название элемента (для логов)
+     * Использование MutationObserver для удаления элемента
      */
     function observeAndRemove(selector, name) {
         const observer = new MutationObserver(() => {
@@ -27,87 +27,39 @@
             }
         });
 
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true,
-        });
+        observer.observe(document.body, { childList: true, subtree: true });
     }
 
     /**
-     * Удаление конкретных параграфов из заданного контейнера по тексту
-     * @param {string} parentSelector - Селектор контейнера
-     * @param {Array<string>} textsToRemove - Массив текстов, которые нужно удалить
+     * Замена содержимого контейнера новостей на <iframe>
      */
-    function observeAndRemoveParagraphs(parentSelector, textsToRemove) {
-        const observer = new MutationObserver(() => {
-            const parentElement = document.querySelector(parentSelector);
-            if (parentElement) {
-                const paragraphs = parentElement.querySelectorAll('p');
-                paragraphs.forEach((paragraph) => {
-                    textsToRemove.forEach((text) => {
-                        if (paragraph.textContent.trim().includes(text)) {
-                            paragraph.remove();
-                            console.log(`Параграф с текстом "${text}" удалён.`);
-                        }
-                    });
-                });
-            }
-        });
-
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true,
-        });
+    function replaceNewsContent() {
+        const newsContainer = document.querySelector('.user-dashboard');
+        if (newsContainer) {
+            newsContainer.innerHTML = ''; // Очищаем содержимое блока
+            const iframe = document.createElement('iframe');
+            iframe.src = 'https://qlstudios.ru/rssuvisualplugin/newssdo';
+            iframe.width = '100%';
+            iframe.height = '600px';
+            iframe.style.border = 'none';
+            newsContainer.appendChild(iframe);
+            console.log('Новости заменены на iframe.');
+        } else {
+            console.log('Контейнер новостей отсутствует.');
+        }
     }
-
-/**
- * Замена содержимого контейнера новостей на <iframe>
- */
-function replaceNewsContent() {
-    const newsContainer = document.querySelector('.user-dashboard');
-    if (newsContainer) {
-        newsContainer.innerHTML = ''; // Очищаем содержимое блока
-
-        // Создаём iframe
-        const iframe = document.createElement('iframe');
-        iframe.src = 'https://qlstudios.ru/rssuvisualplugin/newssdo'; // Ваша страница
-        iframe.width = '100%'; // Устанавливаем ширину
-        iframe.height = '600px'; // Устанавливаем высоту
-        iframe.style.border = 'none'; // Убираем границу
-
-        newsContainer.appendChild(iframe);
-        console.log('Новости заменены на iframe.');
-    } else {
-        console.log('Контейнер новостей отсутствует. Пропускаем.');
-    }
-}
-// Переопределяем консольный вывод для игнорирования ошибок
-window.onerror = function (message, source, lineno, colno, error) {
-    if (message.includes('Blocked a frame with origin') || message.includes('SecurityError')) {
-        return true; // Подавляем сообщение об ошибке
-    }
-};
-
 
     /**
-     * Удаление инлайн-скрипта по содержимому
-     * @param {string} keyword - Ключевое слово для поиска в тексте скрипта
-     * @param {string} name - Название элемента (для логов)
+     * Игнорирование ошибок iframe
      */
-    function removeInlineScript(keyword, name) {
-        const scripts = document.querySelectorAll('script');
-        let removed = false;
-        scripts.forEach((script) => {
-            if (script.textContent.includes(keyword)) {
-                script.remove();
-                removed = true;
-            }
-        });
-        console.log(removed ? `Инлайн-скрипт '${name}' удалён.` : `Инлайн-скрипт '${name}' отсутствует.`);
-    }
+    window.onerror = function (message) {
+        if (message.includes('Blocked a frame with origin') || message.includes('SecurityError')) {
+            return true;
+        }
+    };
 
     /**
-     * Имитация нажатия средней кнопки мыши только для указанных страниц
+     * Имитация нажатия средней кнопки мыши
      */
     function emulateMiddleClickOnSpecificPages() {
         const currentURL = window.location.href;
@@ -118,29 +70,15 @@ window.onerror = function (message, source, lineno, colno, error) {
 
         if (allowedPages.includes(currentURL)) {
             document.addEventListener('click', (event) => {
-                if (event.button === 0) { // ЛКМ
-                    const target = event.target.closest('a'); // Проверяем, кликнули ли по ссылке
+                if (event.button === 0) {
+                    const target = event.target.closest('a');
                     if (target && target.href) {
-                        event.preventDefault(); // Предотвращаем стандартное поведение ЛКМ
-                        window.open(target.href, '_self'); // Переходим по ссылке в текущей вкладке
+                        event.preventDefault();
+                        window.open(target.href, '_self');
                         console.log(`Переход по ссылке: ${target.href}`);
                     }
                 }
             });
-        }
-    }
-
-    /**
-     * Модификация элемента "Домой" на "СДО"
-     */
-    function modifyHomeLink() {
-        const homeLink = document.querySelector('li a[href="https://sdo.rgsu.net/?page_id=m0101&page_id=m0101"]');
-        if (homeLink) {
-            homeLink.href = 'https://sdo.rgsu.net/';
-            homeLink.querySelector('span').textContent = 'СДО';
-            console.log('Ссылка "Домой" заменена на "СДО".');
-        } else {
-            console.log('Элемент "Домой" не найден.');
         }
     }
 
@@ -186,111 +124,6 @@ window.onerror = function (message, source, lineno, colno, error) {
         console.log('Стили для hm-es-event-toolbar-button-icon обновлены.');
     }
 
-    /**
-     * Создание окна настроек
-     */
-    function createSettingsWindow() {
-        const settingsOverlay = document.createElement('div');
-        settingsOverlay.id = 'settings-overlay';
-        settingsOverlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            visibility: hidden;
-        `;
-
-        const settingsWindow = document.createElement('div');
-        settingsWindow.style.cssText = `
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-            width: 400px;
-            text-align: center;
-            position: relative;
-        `;
-
-        const title = document.createElement('h2');
-        title.textContent = 'RSSU Visual by MinimalCaxapa';
-        title.style.color = '#0078d4';
-
-        const subtitle = document.createElement('p');
-        subtitle.textContent = 'В разработке';
-        subtitle.style.color = '#333';
-        subtitle.style.fontSize = '16px';
-        subtitle.style.marginTop = '10px';
-
-        const closeButton = document.createElement('button');
-        closeButton.textContent = '×';
-        closeButton.style.cssText = `
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: #333;
-        `;
-        closeButton.addEventListener('click', () => {
-            settingsOverlay.style.visibility = 'hidden';
-        });
-
-        settingsWindow.appendChild(title);
-        settingsWindow.appendChild(subtitle);
-        settingsWindow.appendChild(closeButton);
-        settingsOverlay.appendChild(settingsWindow);
-        document.body.appendChild(settingsOverlay);
-    }
-
-    /**
-     * Показ окна настроек
-     */
-    function showSettingsWindow() {
-        const settingsOverlay = document.querySelector('#settings-overlay');
-        if (settingsOverlay) {
-            settingsOverlay.style.visibility = 'visible';
-        }
-    }
-
-    /**
-     * Добавление кнопки настроек в панель навигации
-     */
-    function addSettingsButton() {
-        const navBar = document.querySelector('.tab-bar .wrapper ul');
-        if (navBar) {
-            const settingsButton = document.createElement('li');
-            settingsButton.classList.add('settings-button');
-
-            const settingsLink = document.createElement('a');
-            settingsLink.href = '#';
-            settingsLink.innerHTML = '<span>Настройка RSSU Visual</span>';
-            settingsLink.addEventListener('click', (event) => {
-                event.preventDefault();
-                showSettingsWindow();
-            });
-
-            settingsButton.appendChild(settingsLink);
-            navBar.appendChild(settingsButton);
-            console.log('Кнопка настроек добавлена в панель навигации.');
-        } else {
-            console.log('Панель навигации не найдена. Кнопка настроек не добавлена.');
-        }
-    }
-
-    // Создаем окно настроек
-    createSettingsWindow();
-
-    // Добавляем кнопку настроек
-    addSettingsButton();
-
     // Настраиваем наблюдение и удаление элементов
     observeAndRemove('.ui-dialog.ui-widget[aria-labelledby="ui-dialog-title-sna_popup"]', 'Большой ориентационный тест (БОТ)');
     observeAndRemove('.ui-widget-overlay', 'Оверлей');
@@ -313,21 +146,15 @@ window.onerror = function (message, source, lineno, colno, error) {
     // Заменяем новости
     replaceNewsContent();
 
-    // Удаляем инлайн-скрипт
-    removeInlineScript('Ya.Metrika', 'Инлайн-скрипт Яндекс.Метрики');
-
-    // Активируем переход по ссылкам только для заданных страниц
+    // Имитация нажатия средней кнопки мыши
     emulateMiddleClickOnSpecificPages();
 
-    // Модифицируем ссылку "Домой"
-    modifyHomeLink();
-
-    // Удаляем блок логотипа и снимаем фиксированную высоту
+    // Удаляем блок логотипа и фиксированную высоту
     removeLogoBlockAndFixHeader();
 
-    // Изменяем фон блока user-block-wrapper
+    // Обновляем стили для блока user-block-wrapper
     updateUserBlockWrapperBackground();
 
-    // Изменяем стили для toolbar icons
+    // Обновляем стили для toolbar icons
     updateToolbarButtonStyles();
 })();
