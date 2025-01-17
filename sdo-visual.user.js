@@ -3,7 +3,7 @@
 // @namespace    qlstudios.ru
 // @updateURL    https://raw.githubusercontent.com/VladislavBabarikov/rssu-sdo-visual-plugin/main/sdo-visual.user.js
 // @downloadURL  https://raw.githubusercontent.com/VladislavBabarikov/rssu-sdo-visual-plugin/main/sdo-visual.user.js
-// @version      0.5
+// @version      0.6
 // @description  Beta
 // @author       MinimalCaxapa
 // @match        https://sdo.rgsu.net/*
@@ -52,30 +52,56 @@
         observer.observe(document.body, { childList: true, subtree: true });
     }
 
-    /**
-    * Замена содержимого контейнера новостей на два блока
-    */
-    async function replaceNewsContent() {
+     /**
+     * Очищает контейнер новостей.
+     */
+    function clearNewsContainer() {
         const newsContainer = document.querySelector('.user-dashboard');
         if (newsContainer) {
-            try {
-                const response = await fetch('https://raw.githubusercontent.com/VladislavBabarikov/rssu-sdo-deadline/refs/heads/main/rssu_visual_plugin_combined.html');
-                if (response.ok) {
-                    const html = await response.text();
-                    newsContainer.innerHTML = html; // Заменяем содержимое блока
-                    console.log('Новости успешно загружены из GitHub.');
-                } else {
-                    console.error(`Ошибка загрузки: ${response.status}`);
-                    newsContainer.innerHTML = '<p>Не удалось загрузить новости.</p>';
-                }
-            } catch (error) {
-                console.error('Ошибка при загрузке новостей:', error);
-                newsContainer.innerHTML = '<p>Ошибка загрузки данных.</p>';
-            }
+            newsContainer.innerHTML = '';
+            console.log('Контейнер новостей очищен.');
         } else {
-            console.log('Контейнер новостей отсутствует.');
+            console.log('Контейнер новостей не найден.');
         }
     }
+
+    /**
+     * Заменяет содержимое контейнера новостей.
+     */
+    async function replaceNewsContent() {
+        const newsContainer = document.querySelector('.user-dashboard');
+
+        if (!newsContainer) {
+            console.error('Контейнер новостей отсутствует.');
+            return;
+        }
+
+        try {
+            const response = await fetch('https://77.221.157.219:8444/exported/page_61476881_combined.html');
+            if (response.ok) {
+                const html = await response.text();
+                newsContainer.innerHTML = html;
+                console.log('Новости успешно загружены.');
+            } else {
+                console.error(`Ошибка загрузки: ${response.status}`);
+                newsContainer.innerHTML = '<p>Не удалось загрузить новости.</p>';
+            }
+        } catch (error) {
+            console.error('Ошибка при загрузке новостей:', error);
+            newsContainer.innerHTML = '<p>Ошибка загрузки данных.</p>';
+        }
+    }
+
+    /**
+     * Основной процесс инициализации.
+     */
+    function init() {
+        clearNewsContainer(); // Очистить контейнер новостей
+        replaceNewsContent(); // Загрузить новые данные
+    }
+
+    // Выполнение инициализации
+    init();
 
 
     /**
